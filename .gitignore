@@ -27,3 +27,5 @@ yarn-error.log*
 # Other common files to ignore
 coverage/
 .DS_Store
+
+/app/generated/prisma
