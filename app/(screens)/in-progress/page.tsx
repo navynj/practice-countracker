@@ -1,23 +1,22 @@
 'use client';
 
-import { todayAtom } from '@/store/ui';
-import dayjs from 'dayjs';
-import { useAtomValue } from 'jotai';
-import ScreenTitle from '../_components/ScreenTitle';
-import DayNav from '@/components/date/DayNav';
+import DoneTitle from '../_components/title/DoneTitle';
+import InProgressTitle from '../_components/title/InProgressTitle';
+import TodoTitle from '../_components/title/TodoTitle';
 
 const InProgressPage = () => {
-  const today = useAtomValue(todayAtom);
   return (
-    <>
-      <ScreenTitle
-        title={dayjs(today).format('MMMM')}
-        subtitle={today.getFullYear()}
-      >
-        <DayNav />
-      </ScreenTitle>
-      <div></div>
-    </>
+    <div className="flex">
+      <div className="hidden lg:block lg:max-w-4/14 w-full">
+        <TodoTitle isWhite={true} />
+      </div>
+      <div className="lg:max-w-6/14 w-full">
+        <InProgressTitle />
+      </div>
+      <div className="hidden lg:block lg:max-w-4/14 w-full">
+        <DoneTitle isWhite={true} />
+      </div>
+    </div>
   );
 };
 

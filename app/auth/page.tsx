@@ -4,7 +4,7 @@ import Button from '@/components/button/Button';
 import { signIn } from 'next-auth/react';
 import Image from 'next/image';
 
-const Page = () => {
+const AuthPage = () => {
   const googleAuthHandler = async () => {
     await signIn('google', { callbackUrl: '/' });
   };
@@ -40,4 +40,4 @@ const Page = () => {
   );
 };
 
-export default Page;
+export default AuthPage;
