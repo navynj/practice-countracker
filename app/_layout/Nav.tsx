@@ -10,7 +10,7 @@ import { RiLoader2Fill } from 'react-icons/ri';
 const NAV_DATA: { [key: string]: any }[] = [
   { path: '/todo', icon: <FaInbox />, title: 'Todo' },
   { path: '/in-progress', icon: <RiLoader2Fill />, title: 'In Progress' },
-  { path: '/done', icon: <FaSquareCheck />, title: 'Done' },
+  { path: '/completed', icon: <FaSquareCheck />, title: 'Completed' },
 ];
 
 const Nav = ({ className }: ClassNameProps) => {
