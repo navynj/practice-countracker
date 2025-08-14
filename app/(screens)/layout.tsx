@@ -2,6 +2,7 @@
 
 import Nav from '@/app/_layout/Nav';
 import { Suspense } from 'react';
+import ProjectInputOverlay from './_components/form/ProjectInputOverlay';
 
 export default function RootLayout({
   children,
@@ -21,7 +22,9 @@ export default function RootLayout({
         <Suspense></Suspense>
       </div>
       <div id="overlay-container" className="absolute bottom-0 w-full">
-        <Suspense></Suspense>
+        <Suspense>
+          <ProjectInputOverlay />
+        </Suspense>
       </div>
     </div>
   );

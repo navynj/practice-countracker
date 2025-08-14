@@ -13,9 +13,8 @@ interface CheckTableProps {
 }
 
 interface CheckCircleProps {
-  projectId: string;
+  projectId?: string;
   checked: boolean;
-  disabled?: boolean;
 }
 
 const CheckTable = ({ data, disabled }: CheckTableProps) => {
@@ -25,7 +24,7 @@ const CheckTable = ({ data, disabled }: CheckTableProps) => {
       <table className="w-full">
         <tbody>
           {data.map(({ id, title, checked, total }) => (
-            <tr className="border-b border-gray-200/80">
+            <tr key={id} className="border-b border-gray-200/80">
               <td className="text-lg border-r border-gray-200/80" colSpan={3}>
                 <Link
                   className="block p-4 pl-6 "
@@ -35,18 +34,14 @@ const CheckTable = ({ data, disabled }: CheckTableProps) => {
                 </Link>
               </td>
               <td className="p-4 flex flex-wrap gap-1 w-full" colSpan={3}>
-                {Array.from(new Array(checked)).map(() => (
-                  <CheckCircle
-                    projectId={id}
-                    checked={true}
-                    disabled={disabled}
-                  />
+                {Array.from(new Array(checked)).map((_, i) => (
+                  <CheckCircle key={i} projectId={id} checked={true} />
                 ))}
-                {Array.from(new Array(total - checked)).map(() => (
+                {Array.from(new Array(total - checked)).map((_, i) => (
                   <CheckCircle
+                    key={i + checked}
                     projectId={id}
                     checked={false}
-                    disabled={disabled}
                   />
                 ))}
               </td>
@@ -64,7 +59,7 @@ const CheckTable = ({ data, disabled }: CheckTableProps) => {
   );
 };
 
-const CheckCircle = ({ projectId, disabled, checked }: CheckCircleProps) => {
+export const CheckCircle = ({ projectId, checked }: CheckCircleProps) => {
   const today = useAtomValue(todayAtom);
 
   const checkHandler = () => {
@@ -76,9 +71,10 @@ const CheckCircle = ({ projectId, disabled, checked }: CheckCircleProps) => {
     <div
       className={cn(
         'w-7 h-7 rounded-full border border-2',
-        checked ? 'border-primary' : 'border-gray-200'
+        checked ? 'border-primary' : 'border-gray-200',
+        projectId ? 'cursor-pointer' : ''
       )}
-      onClick={disabled ? undefined : checkHandler}
+      onClick={projectId ? checkHandler : undefined}
     />
   );
 };

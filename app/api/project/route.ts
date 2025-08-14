@@ -12,9 +12,12 @@ export async function GET(req: NextRequest) {
     });
   }
 
+  const searchParams = req.nextUrl.searchParams;
+  const status = searchParams.get('status') || undefined;
+
   try {
     const data = await prisma.project.findMany({
-      where: { userId: session.user.id },
+      where: { userId: session.user.id, status },
       orderBy: [{ createdAt: 'asc' }],
     });
 

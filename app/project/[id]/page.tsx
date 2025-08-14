@@ -3,10 +3,12 @@
 import CheckTable from '@/app/(screens)/_components/content/CheckTable';
 import CompletedContent from '@/app/(screens)/_components/content/CompletedContent';
 import TodoContent from '@/app/(screens)/_components/content/TodoContent';
+import StatusTab from '@/app/(screens)/_components/form/StatusTab';
 import CompletedTitle from '@/app/(screens)/_components/title/CompletedTitle';
 import ScreenTitle from '@/app/(screens)/_components/title/ScreenTitle';
 import TodoTitle from '@/app/(screens)/_components/title/TodoTitle';
 import Tab from '@/components/tab/Tab';
+import { StatusType } from '@/store/project';
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { use, useState } from 'react';
@@ -30,14 +32,10 @@ const ProjectPage = ({ params }: { params: Promise<{ id: string }> }) => {
   const router = useRouter();
   const { id: projectId } = use(params);
 
-  const [status, setStatus] = useState('in-progress');
+  const [status, setStatus] = useState<StatusType>('in-progress');
 
   const goBack = () => {
     router.back();
-  };
-
-  const statusHandler = (value: string) => {
-    setStatus(value);
   };
 
   return (
@@ -51,13 +49,7 @@ const ProjectPage = ({ params }: { params: Promise<{ id: string }> }) => {
           <button onClick={goBack}>&lt;</button>
           <div className="flex flex-col items-center gap-2 pt-2">
             <h1 className="text-2xl">Song Title</h1>
-            <Tab
-              className="text-xs"
-              id="song-status"
-              data={PROJECT_STATUS_TAB}
-              value={status}
-              setValue={statusHandler}
-            />
+            <StatusTab status={status} setStatus={setStatus} isWhite={true} />
           </div>
           <Link href={`${pathname}?project-input=show&projectId=${projectId}`}>
             <FaPencil />

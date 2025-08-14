@@ -14,12 +14,14 @@ interface TabProps<T extends FieldValues> extends ClassNameProps {
   value: string;
   setValue: any;
   data: (TabItemType | React.ReactNode)[];
+  isWhite?: boolean;
 }
 const Tab = <T extends FieldValues>({
   id,
   value,
   setValue,
   data,
+  isWhite,
   className,
 }: TabProps<T>) => {
   return (
@@ -63,7 +65,11 @@ const Tab = <T extends FieldValues>({
             <div
               className={cn(
                 'w-[3px] h-[3px] rounded-full',
-                value === tabData.value ? 'bg-white' : ''
+                value === tabData.value
+                  ? isWhite
+                    ? 'bg-white'
+                    : 'bg-primary'
+                  : ''
               )}
             />
           </li>
