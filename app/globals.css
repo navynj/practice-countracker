@@ -5,8 +5,9 @@
 @import 'tailwindcss/theme.css' layer(theme);
 @import 'tailwindcss/preflight.css' layer(base);
 @import 'tailwindcss/utilities.css';
-Import utilities without a layer for higher precedence if needed * {
-  box-sizing: border-box;
+
+@theme {
+  --color-primary: #313338;
 }
 
 body {

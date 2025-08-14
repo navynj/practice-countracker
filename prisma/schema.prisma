@@ -65,7 +65,7 @@ model VerificationToken {
 model Project {
   id           String   @id @default(cuid())
   title        String
-  status       String // backlog | inprogress | completed | archived 
+  status       String // todo | in-progress | completed | archived 
   userId       String
   defaultCount Int
   createdAt    DateTime @default(now())
