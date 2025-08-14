@@ -1,28 +1,17 @@
 'use client';
 
 import OverlayForm from '@/components/overlay/OverlayForm';
-import {
-  projectFormDataAtom,
-  projectMutation,
-  StatusType,
-} from '@/store/project';
+import { projectFormDataAtom, projectMutation } from '@/store/project';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useAtom, useAtomValue } from 'jotai';
+import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import * as z from 'zod';
+import { FaEye, FaTrash } from 'react-icons/fa6';
+import CountInput from './CountInput';
 import StatusTab from './StatusTab';
-import { CheckCircle } from '../content/CheckTable';
-
-const formSchema = z.object({
-  id: z.string().optional(),
-  title: z.string().min(1),
-  defaultGoal: z.number(),
-  status: z.string(),
-});
-
-export type projectFormSchemaType = z.infer<typeof formSchema>;
+import { projectFormSchema, ProjectType, StatusType } from '@/types/data';
 
 const ProjectInputOverlay = () => {
   const router = useRouter();
@@ -35,19 +24,22 @@ const ProjectInputOverlay = () => {
 
   const params = useSearchParams();
   const showProjectInput = params.get('project-input');
+  const status = params.get('status');
 
-  const form = useForm<projectFormSchemaType>({
-    resolver: zodResolver(formSchema),
+  const form = useForm<ProjectType>({
+    resolver: zodResolver(projectFormSchema),
   });
 
-  const submitHandler = async (values: projectFormSchemaType) => {
-    console.log(values);
+  const submitHandler = async (values: ProjectType) => {
     setError('');
 
     try {
       await mutate({
         ...values,
         id: defaultValue?.id || undefined,
+        createdAt: defaultValue?.createdAt
+          ? defaultValue.createdAt
+          : new Date().toISOString(),
       });
 
       router.back();
@@ -70,12 +62,12 @@ const ProjectInputOverlay = () => {
         form.reset();
         form.setValue(
           'status',
-          pathname.includes('todo') ? 'todo' : 'in-progress'
+          pathname.includes('todo') ? 'todo' : (status as StatusType) || 'todo'
         );
         form.setValue('defaultGoal', 5);
       } else {
         for (const keyStr in defaultValue) {
-          const key = keyStr as keyof projectFormSchemaType;
+          const key = keyStr as keyof ProjectType;
           form.setValue(key, defaultValue[key]);
         }
       }
@@ -85,63 +77,50 @@ const ProjectInputOverlay = () => {
   }, [showProjectInput]);
 
   return (
-    <OverlayForm<projectFormSchemaType>
+    <OverlayForm<ProjectType>
       id="project-input"
       form={form}
       onSubmit={submitHandler}
-      isRight={true}
-      disableReset={true}
-      disalbeBackOnSubmit={true}
       className="flex flex-col items-center gap-4 text-sm"
       isPending={isPending}
     >
+      <StatusTab
+        status={form.watch('status') as StatusType}
+        setStatus={(status: StatusType) => {
+          form.setValue('status', status);
+        }}
+      />
       <input
         className="text-lg w-full font-light bg-gray-100 p-2 rounded-lg"
         placeholder="Enter the title"
         {...form.register('title')}
         disabled={isPending}
       />
-      <div className="flex flex-col items-center gap-2 my-4 max-w-40 w-full">
-        <label htmlFor="defaultGoal" className="font-extrabold text-sm">
-          Default Count Goal
-        </label>
-        <div className="flex gap-8 text-xl text-gray-400">
-          <button
-            type="button"
-            onClick={() => {
-              const prev = +form.getValues('defaultGoal');
-              form.setValue('defaultGoal', prev > 0 ? prev - 1 : 0);
-            }}
-          >
-            -
-          </button>
-          <input
-            id="defaultGoal"
-            type="number"
-            className="text-4xl field-sizing-content text-primary"
-            {...form.register('defaultGoal')}
-          />
-          <button
-            type="button"
-            onClick={() => {
-              form.setValue('defaultGoal', form.getValues('defaultGoal') + 1);
-            }}
-          >
-            +
-          </button>
-        </div>
-        <div className="flex gap-1 flex-wrap">
-          {Array.from(new Array(form.watch('defaultGoal'))).map((_, i) => (
-            <CheckCircle key={i} checked={false} />
-          ))}
-        </div>
-      </div>
-      <StatusTab
-        status={form.getValues('status') as StatusType}
-        setStatus={(status: StatusType) => {
-          form.setValue('status', status);
-        }}
+      <CountInput
+        title="Default Count Goal"
+        form={form}
+        fieldName="defaultGoal"
       />
+      {defaultValue && !isPending && (
+        <div className="max-w-[50%] w-full flex justify-between items-center gap-1 [&>*]:w-full [&>*]:py-2 font-extrabold text-xs text-gray-400">
+          <Link
+            href={`${pathname}?${params.toString()}&project-delete=show`}
+            className="flex justify-center items-center gap-2 text-red-400"
+          >
+            <FaTrash /> <span>Delete</span>
+          </Link>
+          <Link
+            href={`/project/${defaultValue.id}${
+              defaultValue.title
+                ? `?title=${encodeURIComponent(defaultValue.title || '')}`
+                : ''
+            }`}
+            className="block w-full flex justify-center items-center gap-2"
+          >
+            <FaEye /> <span>View Detail</span>
+          </Link>
+        </div>
+      )}
       {!!Object.keys(form.formState.errors).length && (
         <div className="space-y-2 my-2">
           {Object.keys(form.formState.errors).map((key) => (
@@ -150,7 +129,7 @@ const ProjectInputOverlay = () => {
               className="w-full p-2 px-4 text-sm bg-red-50 text-red-400 font-bold text-center rounded-lg"
             >
               {(
-                form.formState.errors[key as keyof projectFormSchemaType]
+                form.formState.errors[key as keyof ProjectType]
                   ?.message as string
               )
                 ?.split('\n')
@@ -162,6 +141,11 @@ const ProjectInputOverlay = () => {
                 ))}
             </div>
           ))}
+          {error && (
+            <div className="w-full p-2 px-4 text-sm bg-red-50 text-red-400 font-bold text-center rounded-lg">
+              {error}
+            </div>
+          )}
         </div>
       )}
     </OverlayForm>

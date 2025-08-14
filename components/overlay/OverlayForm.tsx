@@ -10,8 +10,8 @@ interface OverlayFormProps<T extends FieldValues> extends OverlayProps {
   form: UseFormReturn<T, any, any>;
   onSubmit: (values: T) => Promise<void>;
   hideButtons?: boolean;
-  disableReset?: boolean;
-  disalbeBackOnSubmit?: boolean;
+  enableReset?: boolean;
+  enableBackOnSubmit?: boolean;
   isPending?: boolean;
   saveStr?: string;
 }
@@ -21,8 +21,8 @@ const OverlayForm = <T extends FieldValues>({
   form,
   onSubmit,
   hideButtons,
-  disableReset,
-  disalbeBackOnSubmit,
+  enableReset,
+  enableBackOnSubmit,
   onClose,
   isPending,
   saveStr,
@@ -34,8 +34,8 @@ const OverlayForm = <T extends FieldValues>({
   const submitHandler = async (values: T) => {
     try {
       await onSubmit(values);
-      !disalbeBackOnSubmit && closeHandler();
-      !disalbeBackOnSubmit && router.back();
+      enableBackOnSubmit && closeHandler();
+      enableBackOnSubmit && router.back();
     } catch (error) {
       console.error(error);
     }
@@ -43,7 +43,7 @@ const OverlayForm = <T extends FieldValues>({
 
   const closeHandler = () => {
     onClose && onClose();
-    !disableReset && form.reset();
+    enableReset && form.reset();
   };
 
   const cancleHandler = () => {
@@ -60,11 +60,13 @@ const OverlayForm = <T extends FieldValues>({
     >
       <form onSubmit={form.handleSubmit(submitHandler)} className="w-full">
         <div className={className}>{children}</div>
-        {!hideButtons && <SaveCancelButton
-          saveStr={saveStr}
-          onCancel={cancleHandler}
-          isPending={form.formState.isSubmitting || isPending}
-        />}
+        {!hideButtons && (
+          <SaveCancelButton
+            saveStr={saveStr}
+            onCancel={cancleHandler}
+            isPending={form.formState.isSubmitting || isPending}
+          />
+        )}
       </form>
     </Overlay>
   );

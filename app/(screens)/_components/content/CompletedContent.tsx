@@ -1,15 +1,10 @@
+import { ProjectType } from '@/types/data';
 import Link from 'next/link';
 
-const DUMMY_COMPLETEDS = [
-  { title: 'Love me like this', id: '1' },
-  { title: 'Fly!', id: '2' },
-  { title: "Can't Stop", id: '3' },
-];
-
-const CompletedContent = () => {
+const CompletedContent = ({ data }: { data: ProjectType[] }) => {
   return (
     <ul>
-      {DUMMY_COMPLETEDS.map(({ title, id }) => (
+      {data?.map(({ title, id }) => (
         <li
           key={id}
           className="p-6 flex justify-between items-center border-b border-gray-200/80"

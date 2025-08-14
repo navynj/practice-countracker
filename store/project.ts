@@ -1,18 +1,12 @@
-import { projectFormSchemaType } from '@/app/(screens)/_components/form/ProjectInputOverlay';
-import { updateAtom } from '@/util/query';
+import { getDashDate } from '@/util/date';
+import { removeAtom, updateAtom } from '@/util/query';
 import { atom } from 'jotai';
 import { atomWithMutation, atomWithQuery } from 'jotai-tanstack-query';
+import { logsTodayAtom } from './log';
+import { pageProjectIdAtom, todayAtom } from './ui';
+import { ProjectType } from '@/types/data';
 
-export interface ProjectType {
-  id: string;
-  title: string;
-  status: StatusType;
-  defaultGoal: number;
-}
-
-export type StatusType = 'todo' | 'in-progress' | 'completed' | 'archived';
-
-export const ProjectAtom = atomWithQuery<ProjectType[]>(() => {
+export const projectAtom = atomWithQuery<ProjectType[]>(() => {
   return {
     queryKey: ['project'],
     queryFn: async () => {
@@ -23,61 +17,71 @@ export const ProjectAtom = atomWithQuery<ProjectType[]>(() => {
   };
 });
 
-export const ProjectInProgressAtom = atomWithQuery<ProjectType[]>((get) => {
+export const projectInProgressAtom = atomWithQuery<ProjectType[]>((get) => {
+  const { data } = get(projectAtom);
   return {
-    queryKey: ['project-in-progress'],
+    queryKey: ['project-in-progress', get(projectAtom)],
     queryFn: async () => {
-      const projects = get(ProjectAtom);
-      return (
-        projects.data?.filter(({ status }) => status === 'in-progress') || []
-      );
+      return data?.filter(({ status }) => status === 'in-progress') || [];
     },
   };
 });
 
-export const ProjectTodoAtom = atomWithQuery<ProjectType[]>((get) => {
+export const projectTodoAtom = atomWithQuery<ProjectType[]>((get) => {
+  const { data } = get(projectAtom);
   return {
-    queryKey: ['project-todo'],
+    queryKey: ['project-todo', get(projectAtom)],
     queryFn: async () => {
-      const projects = get(ProjectAtom);
-      return projects.data?.filter(({ status }) => status === 'todo') || [];
+      return data?.filter(({ status }) => status === 'todo') || [];
     },
   };
 });
 
-export const ProjectCompletedAtom = atomWithQuery<ProjectType[]>((get) => {
+export const projectCompletedAtom = atomWithQuery<ProjectType[]>((get) => {
+  const { data } = get(projectAtom);
   return {
-    queryKey: ['project-completed'],
+    queryKey: ['project-completed', get(projectAtom)],
     queryFn: async () => {
-      const projects = get(ProjectAtom);
-      return (
-        projects.data?.filter(({ status }) => status === 'completed') || []
-      );
+      return data?.filter(({ status }) => status === 'completed') || [];
     },
   };
 });
 
-export const ProjectArchivedAtom = atomWithQuery<ProjectType[]>((get) => {
+export const pageProjectAtom = atomWithQuery<ProjectType>((get) => {
+  return {
+    queryKey: ['project', get(pageProjectIdAtom)],
+    queryFn: async ({ queryKey: [, projectId] }) => {
+      const res = await fetch(`/api/project/${projectId}`);
+      const data = await res.json();
+      return data;
+    },
+  };
+});
+
+export const projectArchivedAtom = atomWithQuery<ProjectType[]>((get) => {
+  const { data } = get(projectAtom);
   return {
     queryKey: ['project-archived'],
     queryFn: async () => {
-      const projects = get(ProjectAtom);
-      return projects.data?.filter(({ status }) => status === 'archived') || [];
+      return data?.filter(({ status }) => status === 'archived') || [];
     },
   };
 });
 
 export const projectMutation = atomWithMutation<
   ProjectType,
-  Partial<projectFormSchemaType>
+  Partial<ProjectType>
 >((get) => ({
   mutationKey: ['project'],
-  mutationFn: async (project) => {
+  mutationFn: async ({ id, createdAt, ...project }) => {
     try {
+      const today = getDashDate(get(todayAtom));
       const res = await fetch(
-        `/api/project${project.id ? '/' + project.id : ''}`,
+        `/api/project${id ? '/' + id : ''}${
+          project.status === 'in-progress' ? `?date=${today}` : ''
+        }`,
         {
-          method: project.id ? 'PATCH' : 'POST',
+          method: id ? 'PATCH' : 'POST',
           body: JSON.stringify(project),
         }
       );
@@ -86,22 +90,78 @@ export const projectMutation = atomWithMutation<
       throw error;
     }
   },
-  onSuccess: (data) => {
+  onMutate: (data) => {
     updateAtom(data, 'project');
-    get(ProjectTodoAtom).refetch();
-    get(ProjectInProgressAtom).refetch();
-    get(ProjectCompletedAtom).refetch();
-    get(ProjectArchivedAtom).refetch();
+
+    const { data: logs } = get(logsTodayAtom);
+    const log = logs?.find(({ projectId }) => projectId === data.id);
+    if (log) {
+      if (data.status === 'in-progress') {
+        updateAtom(
+          {
+            ...log,
+            projectId: data.id,
+            project: { ...data },
+            goal: data.defaultGoal,
+          },
+          ['log', get(todayAtom)]
+        );
+      } else {
+        removeAtom(log.id, ['log', get(todayAtom)]);
+      }
+    } else {
+      updateAtom(
+        {
+          id: data.id,
+          projectId: data.id,
+          project: { ...data },
+          goal: data.defaultGoal,
+          count: 0,
+        },
+        ['log', get(todayAtom)]
+      );
+    }
+  },
+  onSuccess: (data) => {
+    get(projectAtom).refetch();
+    get(logsTodayAtom).refetch();
   },
 }));
 
-export const currentProjectAtom = atom<Partial<ProjectType> | null>(null);
+export const projectDeletion = atomWithMutation<ProjectType, string>((get) => ({
+  mutationKey: ['project'],
+  mutationFn: async (id) => {
+    try {
+      const res = await fetch(`/api/project/${id}`, {
+        method: 'DELETE',
+      });
+      return await res.json();
+    } catch (error) {
+      throw error;
+    }
+  },
+  onMutate: (id) => {
+    removeAtom(id, 'project');
+
+    const { data: logs } = get(logsTodayAtom);
+    const log = logs?.find(({ projectId }) => projectId === id);
+    if (log) {
+      removeAtom(log.id, ['log', get(todayAtom)]);
+    }
+  },
+  onSuccess: (data) => {
+    get(projectAtom).refetch();
+    get(logsTodayAtom).refetch();
+  },
+}));
+
+export const editingProjectAtom = atom<Partial<ProjectType> | null>(null);
 export const projectFormDataAtom = atom(
   (get) => {
-    const project = get(currentProjectAtom);
+    const project = get(editingProjectAtom);
     return project;
   },
   (get, set, update: Partial<ProjectType> | null) => {
-    set(currentProjectAtom, update);
+    set(editingProjectAtom, update);
   }
 );

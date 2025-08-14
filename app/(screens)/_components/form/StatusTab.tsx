@@ -1,8 +1,7 @@
 'use client';
 
 import Tab from '@/components/tab/Tab';
-import { StatusType } from '@/store/project';
-import React, { useState } from 'react';
+import { StatusType } from '@/types/data';
 
 const PROJECT_STATUS_TAB = [
   { label: 'Todo', value: 'todo' },

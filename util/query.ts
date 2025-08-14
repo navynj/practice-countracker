@@ -1,15 +1,28 @@
 import { queryClient } from '@/lib/query';
 import dayjs from 'dayjs';
-import { getDashDate } from './date';
 
 export const updateAtom = (data: any, key: string | any[]) => {
   queryClient.setQueryData(
     typeof key === 'string' ? [key] : key,
     (prev: any) => {
-      return [
-        ...prev.filter((item: any) => item.id !== data.id),
-        data,
-      ].toSorted((a, b) => (dayjs(a.createdAt) < dayjs(b.createdAt) ? 1 : -1));
+      if (prev) {
+        return [
+          ...prev.filter((item: any) => item.id !== data.id),
+          data,
+        ].toSorted((a, b) => {
+          return key.includes('log') &&
+            a.project?.createdAt &&
+            b.project?.createdAt
+            ? dayjs(a.project.createdAt).isBefore(dayjs(b.project.createdAt))
+              ? -1
+              : 1
+            : dayjs(a.createdAt).isBefore(dayjs(b.createdAt))
+            ? -1
+            : 1;
+        });
+      } else {
+        return [data];
+      }
     }
   );
 };

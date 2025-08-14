@@ -3,13 +3,13 @@
 import TodoContent from '../_components/content/TodoContent';
 import TodoTitle from '../_components/title/TodoTitle';
 
-const InProgressPage = () => {
+const TodoPage = ({ isWhite }: { isWhite: boolean }) => {
   return (
     <>
-      <TodoTitle />
+      <TodoTitle isWhite={isWhite} />
       <TodoContent />
     </>
   );
 };
 
-export default InProgressPage;
+export default TodoPage;
