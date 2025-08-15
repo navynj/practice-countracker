@@ -10,12 +10,14 @@
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.10.0",
+    "@hookform/resolvers": "^5.2.1",
     "@neondatabase/serverless": "^1.0.1",
     "@prisma/adapter-neon": "^6.14.0",
     "@prisma/client": "^6.14.0",
     "@tanstack/react-query": "^5.85.0",
     "clsx": "^2.1.1",
     "dayjs": "^1.11.13",
+    "framer-motion": "^12.23.12",
     "jotai": "^2.13.1",
     "jotai-tanstack-query": "^0.11.0",
     "next": "15.4.6",
@@ -24,8 +26,10 @@
     "react-dom": "19.1.0",
     "react-hook-form": "^7.62.0",
     "react-icons": "^5.5.0",
+    "react-responsive": "^10.0.1",
     "tailwind-merge": "^3.3.1",
-    "tailwind-scrollbar-hide": "^4.0.0"
+    "tailwind-scrollbar-hide": "^4.0.0",
+    "zod": "^4.0.17"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
@@ -35,5 +39,6 @@
     "prisma": "^6.14.0",
     "tailwindcss": "^4",
     "typescript": "^5"
-  }
+  },
+  "packageManager": "pnpm@10.5.2+sha512.da9dc28cd3ff40d0592188235ab25d3202add8a207afbedc682220e4a0029ffbff4562102b9e6e46b4e3f9e8bd53e6d05de48544b0c57d4b0179e22c76d1199b"
 }

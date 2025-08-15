@@ -19,16 +19,19 @@ export const GET = async (
       });
     }
 
-    const project = await prisma.project.findUnique({
+    const log = await prisma.log.findUnique({
       where: {
         id,
       },
+      include: {
+        project: true,
+      },
     });
 
-    return NextResponse.json(project);
+    return NextResponse.json({ log });
   } catch (error) {
     console.error(error);
-    return new Response('Failed to get project', { status: 500 });
+    return new Response('Failed to get log', { status: 500 });
   }
 };
 
@@ -38,7 +41,6 @@ export async function PATCH(
 ) {
   const resolvedParams = await context.params;
   const { id } = resolvedParams;
-
   try {
     const session = await getServerSession(authOptions);
 
@@ -50,55 +52,20 @@ export async function PATCH(
 
     const data = await req.json();
 
-    const searchParams = req.nextUrl.searchParams;
-    const date = searchParams.get('date') || undefined;
-
-    const res = await prisma.project.update({
+    const res = await prisma.log.update({
       where: {
         id: id,
       },
       data,
+      include: {
+        project: true,
+      },
     });
-
-    if (date) {
-      const logs = await prisma.log.findMany({
-        where: {
-          userId: session.user.id,
-          projectId: id,
-          date,
-        },
-        include: { project: true },
-        orderBy: [{ createdAt: 'asc' }],
-      });
-
-      if (logs.length < 1) {
-        await prisma.log.create({
-          data: {
-            projectId: data.id,
-            goal: data.defaultGoal,
-            count: 0,
-            date,
-            userId: session.user.id,
-          },
-        });
-      } else {
-        for (const log of logs) {
-          await prisma.log.update({
-            where: {
-              id: log.id,
-            },
-            data: {
-              goal: data.defaultGoal,
-            },
-          });
-        }
-      }
-    }
 
     return NextResponse.json(res, { status: 200 });
   } catch (error) {
     console.error(error);
-    return new Response('Failed to update project:' + id, { status: 500 });
+    return new Response('Failed to update log:' + id, { status: 500 });
   }
 }
 
@@ -118,7 +85,7 @@ export async function DELETE(
       });
     }
 
-    const res = await prisma.project.delete({
+    const res = await prisma.log.delete({
       where: {
         id: id,
       },
@@ -127,6 +94,6 @@ export async function DELETE(
     return NextResponse.json(res, { status: 200 });
   } catch (error) {
     console.error(error);
-    return new Response('Failed to delete project:' + id, { status: 500 });
+    return new Response('Failed to delete log:' + id, { status: 500 });
   }
 }
